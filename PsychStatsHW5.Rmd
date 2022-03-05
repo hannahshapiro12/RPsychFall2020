@@ -1,0 +1,98 @@
+---
+title: "Assigment 5"
+author: "Hannah Shapiro"
+date: "March 2, 2021"
+output:
+  html_document:
+    df_print: paged
+    
+---
+```{r, warning=FALSE}
+library(ggplot2)
+library(tidyverse)
+nhanes_small <- read.csv("~/Desktop/School/SPRING 2021/Psych Stats/nhanes_small.csv")
+na.omit(nhanes_small)
+```
+
+```{r, warning=FALSE}
+ggplot(data = nhanes_small, aes(Weight, Poverty)) +
+  geom_point() +
+  theme_classic() +
+  geom_smooth(color = "red", method = lm)+
+  labs(x = "Weight (kg)",
+       y = "Poverty Level",
+       title = "Relationship between Weight and Poverty Level")
+```
+
+```{r, warning=FALSE}
+ggplot(data = nhanes_small, aes(Weight, Poverty)) +
+  geom_line() +
+  theme_dark() +
+  geom_smooth(color = "yellow", method = lm)+
+  labs(x = "Weight (kg)",
+       y = "Poverty Level",
+       title = "Relationship between Weight and Poverty Level")
+```
+
+```{r, warning=FALSE}
+ggplot(data = nhanes_small, aes(Weight, Poverty)) +
+  geom_violin(col="green", fill="blue") +
+  theme_minimal() +
+  geom_smooth(color="green", method = lm)+
+  labs(x = "Weight (kg)",
+       y = "Poverty Level",
+       title = "Relationship between Weight and Poverty Level")
+```
+
+Of these 3 graphs, the first one best represents the data, as I believe that the points are not related, making the line chart and violin plot not make sense. I also think that the chart will be improved adding the third variable of gender, as that can change the relationship with weight, as males usually weigh more than females.
+
+```{r, warning=FALSE}
+ggplot() +
+  geom_point(data = nhanes_small, aes(x = Weight, y = Poverty, color = Gender)) + theme_dark() +
+  scale_color_brewer("Paired")+
+  geom_smooth(data=nhanes_small, aes(x = Weight, y = Poverty, color = Gender), method = lm) +
+  labs(x = "Weight (kg)",
+       y = "Poverty Level",
+       title = "Relationship between Weight and Poverty Level by Gender")
+```
+
+As can be seen by this plot, separating the plot by gender shows 2 very different trends: as weight increases for males so does poverty level, while this trend is reversed in females. This means that this plot is enhanced by introducing this third variable, as it tells us more clear trends in what is happening.
+
+# Explanation vs. Clutter
+```{r, warning=FALSE}
+corCoeffsF<- nhanes_small %>% 
+  filter(Gender == "female") %>% 
+  na.omit() %>% 
+  summarise(cor(Weight, Poverty))
+
+corCoeffsM<- nhanes_small %>% 
+  filter(Gender == "male") %>% 
+  na.omit() %>% 
+  summarise(cor(Weight, Poverty))
+
+ggplot() +
+  geom_point(data = nhanes_small, aes(x = Weight, y = Poverty, color = Gender)) + theme_classic() +
+  scale_color_grey(start = 0.3, end = 0.6, labels = c("female", "male"))+
+  geom_smooth(data = nhanes_small, aes(x = Weight, y = Poverty, color = Gender), method = lm) +
+  geom_hline(data = nhanes_small, aes(yintercept = mean(Poverty, na.rm=T)))+
+  labs(x = "Weight (kg)",
+       y = "Poverty Level",
+       title = "Relationship between Weight and Poverty Level by Gender") +
+    annotate("text", x = 115, y = -0.5, label = paste0("Female r: ", round(corCoeffsF[1,1], digits = 2))) +
+  annotate("text", x = 115, y = -1, label = paste0("Male r: ", round(corCoeffsM[1,1], digits = 2))) 
+```
+
+I think the addition of the third geom command, hline, make the graph look cluttered, especially in greyscale, as it is hard to differentiate between what is a line of best fit versus which is the mean of poverty. I think it better represents the data to remove this line, and just have the data points speak for themselves. This is what it looks like without hline:
+```{r, warning=FALSE}
+ggplot() +
+  geom_point(data = nhanes_small, aes(x = Weight, y = Poverty, color = Gender)) + theme_classic() +
+  scale_color_grey(start = 0.3, end = 0.6, labels = c("female", "male"))+
+  geom_smooth(data = nhanes_small, aes(x = Weight, y = Poverty, color = Gender), method = lm) +
+  labs(x = "Weight (kg)",
+       y = "Poverty Level",
+       title = "Relationship between Weight and Poverty Level by Gender") +
+    annotate("text", x = 115, y = -0.5, label = paste0("Female r: ", round(corCoeffsF[1,1], digits = 2))) +
+  annotate("text", x = 115, y = -1, label = paste0("Male r: ", round(corCoeffsM[1,1], digits = 2)))
+```
+
+

@@ -1,0 +1,207 @@
+---
+title: "R Final Project"
+author: "Hannah Shapiro"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+
+
+```{r}
+library(knitr)
+library(tidyverse)
+library(broom)
+library(psych)
+library(ggplot2)
+library(ggpubr)
+```
+
+# Part 1
+
+```{r}
+# Importing the data sets without changing them from base yet
+
+hcp.cognitive <- read.csv("~/Downloads/hcp-cognitive.csv")
+hcp.demos <- read.csv("~/Downloads/hcp-demos.csv")
+hcp.personality <- read.csv("~/Downloads/hcp-personality.csv")
+```
+
+```{r}
+# Transforming the demographic data set
+
+finalData<- hcp.demos
+finalData$Age<- NULL
+finalData$Gender<- NULL
+
+for(i in 1:100) {
+  if(!(is.na(hcp.demos$M_22.25[i])) | !(is.na(hcp.demos$M_31.35[i])) | !(is.na(hcp.demos$M_26.30[i])) | !(is.na(hcp.demos$M_36.[i]))) {
+    finalData$Gender[i] <- "M"
+  }
+  else {
+    finalData$Gender[i] <- "F"
+  }
+}
+for(i in 1:100) {
+if(!is.na(finalData$M_22.25[i]) | !is.na(finalData$F_22.25[i])) {
+  finalData$Age[i] <- "22-25"
+}
+else if(!is.na(finalData$M_26.30[i]) | !is.na(finalData$F_26.30[i])) {
+  finalData$Age[i] <- "26-30"
+}
+else if(!is.na(finalData$M_31.35[i]) | !is.na(finalData$F_31.35[i])) {
+  finalData$Age[i] <- "31-35"
+} 
+else if(!is.na(finalData$M_36.[i]) | !is.na(finalData$F_36.[i])) {
+  finalData$Age[i] <- "36+"
+}   
+else {
+  finalData$Age[i] <- "NA"
+}
+}
+
+demoTransform <- finalData[,c(1,10,11)]
+demoTransform
+
+
+
+
+
+
+```
+
+```{r}
+
+# Cognitive dataset transformation
+
+finalData$CardSort_AgeAdj <- NULL
+finalData$PMAT24_A_CR <- NULL
+finalData$ProcSpeed_AgeAdj <- NULL
+finalData$ListSort_AgeAdj <- NULL
+
+for(i in 1:100) {
+  if(is.na(hcp.cognitive$groupA.CardSort_AgeAdj[i])) {
+    finalData$CardSort_AgeAdj[i] <- hcp.cognitive$groupB.CardSort_AgeAdj[i]
+    finalData$PMAT24_A_CR[i] <- hcp.cognitive$groupB.PMAT24_A_CR[i]
+    finalData$ProcSpeed_AgeAdj[i] <- hcp.cognitive$groupB.ProcSpeed_AgeAdj[i]
+    finalData$ListSort_AgeAdj[i] <- hcp.cognitive$groupB.ListSort_AgeAdj[i]
+}
+else {
+   finalData$CardSort_AgeAdj[i] <- hcp.cognitive$groupA.CardSort_AgeAdj[i]
+   finalData$PMAT24_A_CR[i] <- hcp.cognitive$groupA.PMAT24_A_CR[i]
+   finalData$ProcSpeed_AgeAdj[i] < -hcp.cognitive$groupA.ProcSpeed_AgeAdj[i]
+   finalData$ListSort_AgeAdj[i] <- hcp.cognitive$groupA.ListSort_AgeAdj[i]
+}
+}
+cogTransform <- finalData[,c(12,13,14,15)]
+
+combineDemoCog <- cbind(demoTransform, cogTransform)
+
+wrangled <- combineDemoCog[order(combineDemoCog$Subject, decreasing=T),]
+
+
+orderedPersonality<-hcp.personality %>% 
+  pivot_wider(names_from = Measure, values_from = Score)
+
+
+
+transformedPersonality <- orderedPersonality[,-1]
+
+hcp <- cbind(wrangled, transformedPersonality)
+hcp
+
+```
+
+# Part 2
+
+```{r, warning=FALSE}
+
+agree <- ggplot(hcp, aes(NEOFAC_A)) + geom_density() + geom_label(aes(33,0.08, label = paste("Mean:", round(mean(NEOFAC_A, na.rm = T,), digits = 2)))) + geom_label(aes(33,0.01, label = paste("SD:", round(sd(NEOFAC_A, na.rm = T), digits = 2)))) + labs(x = "Agreeableness", y = "Density")
+
+conscientious <- ggplot(hcp, aes(NEOFAC_C)) + geom_density() + geom_label(aes(35,0.08, label = paste("Mean:", round(mean(NEOFAC_C, na.rm = T,), digits = 2)))) + geom_label(aes(35,0.01, label = paste("SD:", round(sd(NEOFAC_C, na.rm = T), digits = 2)))) + labs(x = "Conscientiousness", y = "Density")
+
+extraversion <- ggplot(hcp, aes(NEOFAC_E)) + geom_density() + geom_label(aes(33,0.08, label = paste("Mean:", round(mean(NEOFAC_E, na.rm = T,), digits = 2)))) + geom_label(aes(33,0.01, label = paste("SD:", round(sd(NEOFAC_E, na.rm = T), digits = 2)))) + labs(x = "Extraversion", y = "Density")
+
+neuroticism <- ggplot(hcp, aes(NEOFAC_N)) + geom_density() + geom_label(aes(20,0.08, label = paste("Mean:", round(mean(NEOFAC_N, na.rm = T,), digits = 2)))) + geom_label(aes(20,0.01, label = paste("SD:", round(sd(NEOFAC_N, na.rm = T), digits = 2)))) + labs(x = "Neuroticism", y = "Density")
+
+openness <- ggplot(hcp, aes(NEOFAC_O)) + geom_density() + geom_label(aes(33,0.08, label = paste("Mean:",round(mean(NEOFAC_O, na.rm = T,), digits = 2)))) + geom_label(aes(33,0.01, label = paste("SD:",round(sd(NEOFAC_O, na.rm = T), digits = 2)))) + labs(x = "Openness", y = "Density")
+
+figure<-ggarrange(agree, conscientious, extraversion, neuroticism, openness)
+annotate_figure(figure, bottom = text_grob("Figure 1: Distributions of the Big 5"))
+
+```
+
+While not perfectly normal, each aspect of the Big 5 does see a highest density in the middle, which then tapers off into the tails, similar to the normal distribution.
+
+# Part 3
+
+For my multivariate regression, I want to see whether or not life satisfaction is affected by 3 traits from the Big 5: extraversion, openness to experience, and neuroticism. I predict that life satisfaction will increase with extraversion and openness to experience, but will decrease with neuroticism.
+
+```{r}
+fit <- lm(LifeSatisf_Unadj ~ NEOFAC_E + NEOFAC_O + NEOFAC_N, data = hcp)
+summary(fit)
+```
+
+Looking at these findings we can see that, holding all other predictors constant, extraversion, openness to experience, and neuroticism are significant predictors of overall life satisfaction. Namely life satisfaction has a positive relationship with extraversion, while it has a negative relationship with openness to experience and neuroticism.
+
+The test yielded a F-statistic of 16.48, which also has a significant p-value at a testing level when alpha equals 0.05. Because of this signficance we know that a model with these 3 personality trait predictors is better than a model fitted without these traits.
+
+In terms of fit, the model has a R-squared value of 0.3423 and a R-squared adjusted value of 0.3215. This means that there is a moderate correlation between the three predictors and life satisfaction in terms of how Cohen's d assesses effect size.
+
+```{r}
+fitResid <- augment(fit)
+ggplot(fitResid, aes(x = .fitted, y = .resid)) + geom_point() + labs(x = "Fitted", y = "Residuals")
+
+```
+
+Overall, the residuals seem to be more skewed as the fitted values increase. This is not what we want to see in a residuals plot, as it means that there is something else influencing the regression that is making the residuals not be constant.
+
+
+# Part 4
+
+```{r}
+summary(hcp$LifeSatisf_Unadj)
+sd(hcp$LifeSatisf_Unadj)
+life <- rnorm(99, 54.92, 10.11)
+
+summary(hcp$NEOFAC_E)
+sd(hcp$NEOFAC_E, na.rm = T)
+extraversion <- rnorm(99, 30.98, 5.74)
+
+
+summary(hcp$NEOFAC_O)
+sd(hcp$NEOFAC_O, na.rm = T)
+openness <- rnorm(99, 27.26, 6.61)
+
+
+summary(hcp$NEOFAC_N)
+sd(hcp$NEOFAC_N, na.rm = T)
+neuroticism <- rnorm(99, 16.04, 7.67)
+
+
+fitVec <- NULL
+regression <- NULL
+p <- NULL
+sig <- NULL
+for(i in 1:5000) {
+  life <- rnorm(99, 54.92, 10.11)
+  extraversion <- rnorm(99, 30.98, 5.74)
+  openness <- rnorm(99, 27.26, 6.61)
+  neuroticism <- rnorm(99, 16.04, 7.67)
+  fitVec <- lm(life~extraversion+openness+neuroticism)
+  regression <- anova(fitVec)
+  p <- regression$`Pr(>F)`[1]
+  if(p < 0.05) {
+   sig[i] <- 1
+ }
+ else {
+   sig[i] <- 0
+ }
+}
+
+mean(sig)
+
+```
+
+Power is the probability that a hypothesis test finds an effect, given that there is a significant effect to be found. Because the power level when the simulated data is normal is `r mean(sig)`, we can tell that given a significant effect, we have a probability of `r mean(sig)` of finding it. This is extremely low, which leads me to believe that the original data is not normal enough to simulate it with normal data. 

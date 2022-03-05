@@ -1,0 +1,119 @@
+---
+title: "Assignment 4 Cheat Sheet"
+author: "Hannah Shapiro"
+date: "February 21, 2021"
+output:
+  html_document:
+    toc: yes
+    code_folding: hide
+  pdf_document:
+    toc: yes
+---
+
+Here is my cheat sheet on things that we have covered over the semester thus far, I *think* that it's the stuff that will be most helpful in the future, but that remains to be seen.
+
+# Functions of ggplot2 package
+
+This section will include all of the lines of code that we have used to make plots using the ggplot package. Note that using these commands requires the load in of the ggplot2 package.
+
+### ggplot()
+
+This is the command that creates the new plot, as well as lets the coder choose aesthetic specifications using the **aes()** function.
+```{r}
+library(ggplot2)
+ggplot(cars, aes(speed,dist))
+```
+
+Here I created the chart by having distance be the dependent variable while speed is the independent variable. Note that none of the data has actually been plotted yet until the use of *geom_line()* or *geom_point()*, which we will now move to in the next subsection.
+
+### geom_line() and geom_point 
+
+The *geom_line()* function creates the line of the plot when given the parameters of the data that you are using while the *geom_point* function creates a scatter plot. You attach these commands using a **+** sign to the original line of *ggplot()* function. 
+```{r}
+ggplot(cars, aes(speed,dist)) + geom_line()
+ggplot(cars, aes(speed,dist)) + geom_point()
+```
+
+These functions can be manipulated to make the graph look nicer, such as changing the color of the data being presented.
+
+```{r}
+ggplot(cars, aes(speed,dist)) + geom_line(col="red")
+ggplot(cars, aes(speed,dist)) + geom_point(col="red")
+```
+
+### geom_smooth()
+
+The *geom_smooth()* function is used to show patterns in the data, such as through regression. It also is added with a **+** sign to the original *ggplot()* function.
+```{r}
+ggplot(cars, aes(speed,dist)) + geom_line()+geom_smooth(method="lm")
+```
+
+# Tidyverse piping
+
+The tidyverse package helps to streamline coding. There are many functions included in the package, so I won't have time to go over all of them here, but some important ones to note include:
+
+* *filter()*: Helps to subset a data frame to only include rows that fit certain specifications. 
+* *arrange()*: Orders the rows of a data frame based on the values of a given column.
+* *summarise()*: Computes a summary statistic based on groups from the *group_by()* command, or the data frame as a whole.
+* *group_by()*: Groups the data frame by the indicated columns. 
+* *mutate()*: Adds a new column to the data frame.
+
+Here is an example of how to use piping, where I subset the nhanes data set to find the mean weights of each gender/smoking status.
+###### Example
+```{r}
+nhanes <- read.csv("~/Desktop/School/SPRING 2021/Psych Stats/nhanes_small_assignment3.csv")
+library(tidyverse)
+
+subNhanes <- nhanes %>% 
+  group_by(Gender, Smoke100n) %>% 
+  summarise(mean(Weight)) %>% 
+  na.omit(.)
+subNhanes
+```
+
+We find that the average weight of male smokers, for example, is `r subNhanes[1,3]`.
+
+# Logical Operators
+
+This section will cover what the different logical operators mean.
+
+### ==
+
+Using **==** shows equivalence, NOT **=**. 
+
+### <, >, <=, >=
+
+These functions show the object is less than, greater than, less than or equal to, and greater than or equal to respectively. 
+
+### & and |
+
+When you want to include multiple logical operators together, you can use **&** to mean "and", and **|** to mean "or". 
+
+##### Example
+
+For example, if I want to filter the cars dataset to only have a speed between 10 and 15, the code would look like this:
+
+```{r}
+new <- cars[cars$speed >= 10 & cars$speed <= 15,]
+new
+```
+
+Using this command also can make it easier to take summary statistics of these smaller data frames, such as finding the range of the distances associated with these speeds would be `r range(new)`. 
+
+# Indexing
+
+Indexing is useful when you don't need to look at every single row and column of your data set. To do this, you choose your data frame as well as which rows and columns that you wish to be visible. The logical operators above can also be used to help index. 
+
+##### Example
+
+```{r}
+smallernHanes<-nhanes[1:15,c(3,4,5,7)]
+smallernHanes
+```
+
+Note that in this example that because I was selecting columns, there is a comma before the vector of column numbers that I wanted to use.
+
+
+
+
+
